@@ -1,0 +1,19 @@
+# Git version control files
+.git
+.gitignore
+
+# IDE-specific files
+.vscode/
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# Documentation
+*.md
+#enviroment files
+
+.env
+
+# Local binaries (if any)
+notification-service
