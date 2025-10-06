@@ -1,132 +1,202 @@
-# Notification Service (Go)
+# 📬 Notification Service (Go + Gin + MongoDB + Docker)
 
-This is a simple RESTful notification service written in Go. It provides API endpoints to send and retrieve notifications, using MongoDB for data persistence.
+A modular, production-ready **Notification Service** built with **Go**, supporting **Email**, **SMS**, and (soon) **Push notifications**.  
+It follows a clean layered architecture (`Handler → Service → Repository`) for clarity and scalability.
 
-## Features
+---
 
-*   **REST API**: Simple and clean API for creating and listing notifications.
-*   **MongoDB Integration**: Uses MongoDB as the backend database to store notification data.
-*   **Configuration Management**: Easily configurable via environment variables.
-*   **Dockerized**: Comes with a `Dockerfile` for building and running the service in a container.
+## 🚀 Features
 
-## Project Structure
+- Send notifications via **Email** and **SMS**
+- Store sent notifications in **MongoDB**
+- RESTful API using **Gin**
+- Configurable via environment variables
+- **Dockerized** for easy deployment
+- Future support for **Push notifications (FCM)**
+
+---
+
+## 🏗️ Project Structure
 
 ```
-.
-├── cmd/server/
-│   └── main.go         # Application entry point
+notification-service-go/
+├── cmd/
+│   └── main.go                # Entry point
 ├── internal/
-│   ├── api/            # HTTP handlers and router setup
-│   ├── config/         # Configuration loading
-│   ├── db/             # Database connection logic
-│   ├── model/          # Data models (structs)
-│   ├── repository/     # Data access layer (database operations)
-│   └── service/        # Business logic
-├── .dockerignore
-├── .gitignore
+│   ├── config/                # Configuration loading
+│   ├── handler/               # HTTP handlers (API endpoints)
+│   ├── model/                 # Data models (Notification struct)
+│   ├── repository/            # Database logic (MongoDB CRUD)
+│   ├── service/               # Business logic (email/sms)
+│   └── utils/                 # Utility helpers (SMTP, etc.)
 ├── Dockerfile
+├── docker-compose.yml
 ├── go.mod
-└── go.sum
+├── go.sum
+└── README.md
 ```
 
-## API Endpoints
+---
 
-### Create a Notification
+## ⚙️ Setup Instructions
 
-*   **URL**: `/notifications`
-*   **Method**: `POST`
-*   **Body**:
+### 1️⃣ Clone Repository
 
-    ```json
-    {
-        "to": "user@example.com",
-        "subject": "Hello!",
-        "body": "This is the body of the notification."
-    }
-    ```
+```bash
+git clone https://github.com/yourusername/notification-service-go.git
+cd notification-service-go
+```
 
-*   **Success Response**:
-    *   **Code**: `201 Created`
-    *   **Content**:
-        ```json
-        {
-            "message": "Notification sent successfully"
-        }
-        ```
+---
 
-### Get All Notifications
+### 2️⃣ Environment Variables
 
-*   **URL**: `/notifications`
-*   **Method**: `GET`
-*   **Success Response**:
-    *   **Code**: `200 OK`
-    *   **Content**: An array of notification objects.
-        ```json
-        [
-            {
-                "id": "6702a0b3e4b0c3a6b3e4b0c3",
-                "to": "user@example.com",
-                "subject": "Hello!",
-                "body": "This is the body of the notification.",
-                "createdAt": "2025-10-06T10:00:00Z"
-            }
-        ]
-        ```
+Create a `.env` file in your root directory:
 
-## Getting Started
-
-### Prerequisites
-
-*   Go (version 1.20 or later)
-*   MongoDB
-*   Docker (optional, for containerized deployment)
-
-### Configuration
-
-Create a `.env` file in the root of the project and add the following variables:
-
-```env
-# .env
-MONGO_URI=mongodb://localhost:27017/notifications_db
+```bash
 PORT=8080
+
+# MongoDB
+MONGO_URI=mongodb://mongo:27017
+MONGO_DB_NAME=notification_db
+
+# Email SMTP Config
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+EMAIL_FROM=your_email@gmail.com
+EMAIL_PASSWORD=your_app_password
+
+# SMS Provider (for future)
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_PHONE_NUMBER=
 ```
 
-| Variable    | Description                                  | Default |
-|-------------|----------------------------------------------|---------|
-| `MONGO_URI` | The connection string for your MongoDB instance. | (none)  |
-| `PORT`      | The port on which the service will run.      | `8080`  |
+> 💡 **Tip:** Use Gmail App Passwords for `EMAIL_PASSWORD` (not your normal login password).
 
+---
 
-### Running Locally
+### 3️⃣ Run Locally (without Docker)
 
-1.  **Clone the repository:**
-    ```sh
-    git clone <repository-url>
-    cd notification-service-go
-    ```
+Make sure MongoDB is running:
 
-2.  **Install dependencies:**
-    ```sh
-    go mod tidy
-    ```
+```bash
+mongod --dbpath /path/to/mongodb/data
+```
 
-3.  **Run the application:**
-    ```sh
-    go run cmd/server/main.go
-    ```
-    The service will start and be accessible at `http://localhost:8080`.
+Then start the server:
 
-### Running with Docker
+```bash
+go mod tidy
+go run cmd/main.go
+```
 
-1.  **Build the Docker image:**
-    ```sh
-    docker build -t notification-service .
-    ```
+Your API will be available at: [http://localhost:8081](http://localhost:8081) or your assigned port
 
-2.  **Run the Docker container:**
-    
-    *Note: Replace `<your-mongo-uri>` with your MongoDB connection string. If MongoDB is running on your host machine, you might need to use `host.docker.internal` (on Docker Desktop) or your machine's network IP instead of `localhost`.*
+---
 
-    ```sh
-    docker run -p 8080:8080 --name notification-app -e MONGO_URI=<your-mongo-uri> -d notification-service
-    ```
+### 4️⃣ Run with Docker 🐳
+
+---
+
+## 🔌 API Endpoints
+
+### ➤ Send Notification
+
+**POST** `/api/notifications`
+
+#### Request Body
+```json
+{
+  "recipient": "user@example.com",
+  "type": "email",
+  "subject": "Welcome to our platform!",
+  "message": "Hi there, thanks for joining us!"
+}
+```
+
+#### Response
+```json
+{
+  "status": "success",
+  "message": "Notification sent and saved to database"
+}
+```
+
+---
+
+### ➤ Get All Notifications
+
+**GET** `/api/notifications`
+
+#### Response
+```json
+[
+  {
+    "id": "652f123abc...",
+    "type": "email",
+    "recipient": "user@example.com",
+    "subject": "Welcome",
+    "message": "Hi there!",
+    "sentAt": "2025-10-06T10:20:00Z"
+  }
+]
+```
+
+---
+
+## 🧠 Tech Stack
+
+| Layer | Technology |
+|-------|-------------|
+| Language | Go (Golang) |
+| Framework | Gin |
+| Database | MongoDB |
+| Email | SMTP (Gmail) |
+| Container | Docker |
+| SMS (Future) | Twilio |
+| Push (Future) | Firebase Cloud Messaging (FCM) |
+
+---
+
+## 🧱 Folder Responsibilities
+
+| Folder | Purpose |
+|---------|----------|
+| `internal/config` | Loads `.env` configuration |
+| `internal/model` | Defines Notification struct |
+| `internal/repository` | Handles MongoDB operations |
+| `internal/service` | Contains business logic (email/sms sending) |
+| `internal/handler` | API routes and controllers |
+| `internal/utils` | Utility functions (SMTP, Twilio, etc.) |
+
+---
+
+## 🧪 Testing
+
+To test email sending:
+
+```bash
+curl -X POST http://localhost:8080/api/notifications -H "Content-Type: application/json" -d '{
+  "recipient": "recipient@example.com",
+  "type": "email",
+  "subject": "Test Email",
+  "message": "This is a test email from Notification Service."
+}'
+```
+
+---
+
+## 🧱 Future Enhancements
+
+- [ ] Add **Push Notifications (FCM)**
+- [ ] Integrate **Kafka / RabbitMQ** for async notification queue
+- [ ] Add **Retry mechanism** for failed sends
+- [ ] Add **Admin dashboard** to view notification logs
+
+---
+
+## 🧑‍💻 Author
+
+**Piyush Garg**  
+---
